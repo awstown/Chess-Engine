@@ -2,7 +2,6 @@
 
 # import modules used here -- sys is a very standard one
 
-
 # Define the Board
 class Board(object):
 	"Defines the board"
@@ -36,8 +35,8 @@ class Board(object):
 		self.pieces.append(Queen('W','d',1))
 		self.pieces.append(Queen('B','d',8))
 		#Kings
-		self.pieces.append(Queen('W','e',1))
-		self.pieces.append(Queen('B','e',8))
+		self.pieces.append(King('W','e',1))
+		self.pieces.append(King('B','e',8))
 
 			
 	def getPiecePositions(self):
@@ -47,13 +46,27 @@ class Board(object):
 		'''
 		li = []
 		for piece in self.pieces:
-			li.append(piece.getPosition)
+			li.append(piece.getPosition())
 		return li
 
 	def prettyPrint(self):
 		"Prints a pretty representation of the board"
 		hr = '- - - - - - - -'
-		print hr
+
+		pos = {}
+		for p in self.pieces:
+			f = p.position.file()
+			r = p.position.rank
+			pos[(f,r)]=p.uni
+
+		for r in range(1,9):
+			line = ''
+			for f in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'):
+				if (f,r) in pos.keys():
+					line = line+pos[(f,r)]
+				else:
+					line = line + '_'
+			print(line)
 
 
 class Position():
@@ -83,13 +96,13 @@ class Position():
 				else:
 					return False
 
-
-		# Makes that the position is on the board
+		# Makes sure that the position is on the board
 		if file in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h') and rank in range(1,9):
 			self.file = F(file)
 			self.rank = rank
 		else:
-			raise NameError('Invalid Board Position')
+			self.file = F('i')
+			self.rank = 'i'
 
 	def __eq__(self, other):
 		"Equals method for Pieces"
@@ -113,7 +126,7 @@ class Piece(object):
 		self.moves = []
 		self.threats = []
 		self.attackMoves = []
-		self.history = self.position
+		self.history = [self.position]
 
 	def __repr__(self):
 		return self.army + '-' + self.name + ': ' + self.position.__repr__()
@@ -121,24 +134,37 @@ class Piece(object):
 	def getPosition(self):
 		return self.position
 
-	def move(self, frm, to):
+	def move(self, to, board):
 		"Makes moves the Piece updates postion, history, board"
-		self.rankPos = to
-		self.filePos = to
+		self.postion = to
+		self.history.append(self.postion)
+		board.getPiecePositions()
 
 	def movePossible(self, move):
 		if move in self.moves:
 			return True
 
+	def verifyMoves(self, moveList, board):
+		occupied = board.getPiecePositions()
+		vlist = []
+		for pos in moveList:
+			if not (pos in occupied or pos.file() == 'i' or pos.rank == 'i'):
+				vlist.append(pos)
+		return vlist	
 
-
+		
 class King(Piece):
 	"Define the kings possible moves"
 	def __init__(self, army, file, rank):
 		super(King,self).__init__(army, file, rank)
 		self.name = 'King'
+		if army == 'W':
+			self.uni = u"\u2654"
+		else:
+			self.uni = u"\u265a"
 
-	def genMoves(self):
+
+	def genMoves(self, board):
 		"Returns a list of possible moves for the King(Positions type)"
 		moves = []
 		pos = self.position
@@ -152,6 +178,7 @@ class King(Piece):
 			]) 
 		# TODO: Castling 
 		# Check to see if King or Rook has moved
+		moves = self.verifyMoves(moves, board)
 		return moves
 
 class Queen(Piece):
@@ -159,50 +186,112 @@ class Queen(Piece):
 	def __init__(self, army, file, rank):
 		super(Queen,self).__init__(army, file, rank)
 		self.name = 'Queen'
+		if army == 'W':
+			self.uni = u"\u2655"
+		else:
+			self.uni = u"\u265b"		
 
-	def genMoves(self):
+	def genMoves(self, board):
 		"Returns a list of possible moves for the Queen(Positions type)"
-		pass
+		moves = []
+		pos = self.position
+
+		#TODO: Moves
+
+		moves = self.verifyMoves(moves, board)
+		return moves
 
 class Bishop(Piece):
 	"Define the Bishop's possible moves"
 	def __init__(self, army, file, rank):
 		super(Bishop,self).__init__(army, file, rank)
 		self.name = 'Bishop'
+		if army == 'W':
+			self.uni = u"\u2657"
+		else:
+			self.uni = u"\u265d"
 
-	def genMoves(self):
+	def genMoves(self, board):
 		"Returns a list of possible moves for the Bishop(Positions type)"
-		pass
+		moves = []
+		pos = self.position
+
+		#TODO: Moves
+
+		moves = self.verifyMoves(moves, board)
+		return moves
 
 class Knight(Piece):
 	"Define the Knight's possible moves"
 	def __init__(self, army, file, rank):
 		super(Knight,self).__init__(army, file, rank)
 		self.name = 'Knight'
+		if army == 'W':
+			self.uni = u"\u2658"
+		else:
+			self.uni = u"\u265e"
 
-	def genMoves(self):
+	def genMoves(self, board):
 		"Returns a list of possible moves for the Knight(Positions type)"
-		pass
+		moves = []
+		pos = self.position
+
+		#TODO: Moves
+
+		moves = self.verifyMoves(moves, board)
+		return moves
 
 class Rook(Piece):
 	"Define the Rook's possible moves"
 	def __init__(self, army, file, rank):
 		super(Rook,self).__init__(army, file, rank)
 		self.name = 'Rook'
+		if army == 'W':
+			self.uni = u"\u2656"
+		else:
+			self.uni = u"\u265c"
 
-	def genMoves(self):
+	def genMoves(self, board):
 		"Returns a list of possible moves for the Rook(Positions type)"
-		pass
+		moves = []
+		pos = self.position
+
+		#TODO: Moves
+
+		moves = self.verifyMoves(moves, board)
+		return moves
 
 class Pawn(Piece):
 	"Define the Pawns's possible moves"
 	def __init__(self, army, file, rank):
 		super(Pawn,self).__init__(army, file, rank)
 		self.name = 'Pawn'
-
-	def genMoves(self):
+		if army == 'W':
+			self.uni = u"\u2659"
+		else:
+			self.uni = u"\u265f"
+	
+	def genMoves(self, board):
 		"Returns a list of possible moves for the Pawn(Positions type)"
-		pass
+		moves = []
+		pos = self.position
+		# White 
+		if self.army == 'W':  
+			# Ahead 1 space
+			moves.append(Position(pos.file(),pos.rank+1))
+			# Ahead 2 if first move
+			if len(self.history) == 1:
+				moves.append(Position(pos.file(),pos.rank+2))
+		else: # Black
+			moves.append(Position(pos.file(),pos.rank-1))
+			# Ahead 2 if first move
+			if len(self.history) == 1:
+				moves.append(Position(pos.file(),pos.rank-2))
+
+		#TODO: Special Move
+
+		moves = self.verifyMoves(moves, board)
+		return moves
 
 
 

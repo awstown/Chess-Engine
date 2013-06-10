@@ -7,4 +7,4 @@ b = a.getPiecePositions()
 
 c = a.prettyPrint()
 
-a.pieces[-2].genMoves(a)
+a.pieces

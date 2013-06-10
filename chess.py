@@ -39,39 +39,44 @@ class Board(object):
 		self.pieces.append(King('B','e',8))
 
 			
-	def getPiecePositions(self):
+	def getPiecePositions(self, army=""):
 		'''Returns a Dictionary?Tuple?List? of pieces and their positions on the board
 			>>>a = Board()
 			>>>a.getPiecePositions()
 		'''
 		li = []
 		for piece in self.pieces:
-			li.append(piece.getPosition())
+			if army == piece.army or army == "":
+				li.append(piece.getPosition())
 		return li
+
+	def getPieceByPosition(self, pos):
+		for piece in self.pieces:
+			if piece.position == pos:
+				return piece
 
 	def prettyPrint(self):
 		"Prints a pretty representation of the board"
-		hr = '- - - - - - - -'
-
 		pos = {}
 		for p in self.pieces:
 			f = p.position.file()
 			r = p.position.rank
 			pos[(f,r)]=p.uni
 
-		for r in range(1,9):
-			line = ''
+		for r in range(8,0,-1):
+			line = str(r)
 			for f in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'):
 				if (f,r) in pos.keys():
 					line = line+pos[(f,r)]
 				else:
 					line = line + '_'
 			print(line)
+		print ' abcdefgh'
 
 
-class Position():
-	""" Position class for 1) converting from characters to numbers 
-						   2) making sure given Postions are valid
+class Position(object):
+	"""Position class for 1) converting from characters to numbers 
+						  2) making sure given Postions are valid
 	"""
 	def __init__(self, file, rank):
 		class F(object):
@@ -136,19 +141,38 @@ class Piece(object):
 
 	def move(self, to, board):
 		"Makes moves the Piece updates postion, history, board"
-		self.postion = to
-		self.history.append(self.postion)
-		board.getPiecePositions()
+		if self.army == 'W':
+			enemy = 'B'
+		else:
+			enemy = 'W'
+
+		self.genMoves(board)
+		if to in self.moves:
+			# Is it an attack move?
+			print to
+			print board.getPiecePositions(enemy)
+			if to in board.getPiecePositions(enemy):
+				print board.getPieceByPosition(to)
+				e = board.getPieceByPosition(to)
+				print e
+				board.pieces.remove(e)
+			self.position = to
+			self.history.append(self.position)
+			board.getPiecePositions()
+			board.prettyPrint()
+		else:
+			print "That is not a valid move!!!"
 
 	def movePossible(self, move):
 		if move in self.moves:
 			return True
 
 	def verifyMoves(self, moveList, board):
-		occupied = board.getPiecePositions()
+		"Returns a list of verified moves"
+		occupiedByFriends = board.getPiecePositions(self.army)
 		vlist = []
 		for pos in moveList:
-			if not (pos in occupied or pos.file() == 'i' or pos.rank == 'i'):
+			if not (pos in occupiedByFriends or pos.file() == 'i' or pos.rank == 'i'):
 				vlist.append(pos)
 		return vlist	
 
@@ -179,6 +203,7 @@ class King(Piece):
 		# TODO: Castling 
 		# Check to see if King or Rook has moved
 		moves = self.verifyMoves(moves, board)
+		self.moves = moves
 		return moves
 
 class Queen(Piece):
@@ -291,6 +316,7 @@ class Pawn(Piece):
 		#TODO: Special Move
 
 		moves = self.verifyMoves(moves, board)
+		self.moves = moves
 		return moves
 
 
